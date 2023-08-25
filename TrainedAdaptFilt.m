@@ -31,8 +31,9 @@ end
 w = zeros(N,1);
 e_t = zeros(1,nEpoch);
 
-% iterate grad descent 
-figure; subplot(211); wplot = stem(w); subplot(212); eplot = plot(e_t);
+% train w: iterate grad descent 
+figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 
+subplot(211); wplot = stem(w); subplot(212); eplot = semilogy(e_t);
 pause(.5);
 for ep = 1:nEpoch
     E = D - G*w;
@@ -44,4 +45,20 @@ for ep = 1:nEpoch
     pause(eps);
 end
 
+% organize testing epochs 
+G_test = zeros(length(t_test)-N+1, N); 
+T_test = zeros(size(G_test)); 
+D_test = zeros(length(t_test)-N+1,1);
+D_test(:) = d_test(N:length(t_test));
+for nf = 1:(length(t_test)-N+1)
+    G_test(nf,:) = g_test(nf:(nf+N-1));
+    T_test(nf,:) = t_test(nf:(nf+N-1));
+end
+
 % demo final signal 
+op_train = G*w;
+e_train = d_train; e_train(N:end) = e_train(N:end) - op_train;
+op_test = G_test*w;
+e_test = d_test; e_test(N:end) = e_test(N:end) - op_test;
+figure; plot(t_train, e_train); hold on; plot(t_test, e_test);
+xlabel('time (s)'); ylabel('filtered signal (V)'); legend('train', 'test');

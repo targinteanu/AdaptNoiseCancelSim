@@ -21,7 +21,9 @@ hpFilt = designfilt('highpassfir', ...
                     'StopbandAttenuation', 60, ...
                     'SampleRate', 500, ...
                     'DesignMethod', 'equiripple');
-fvtool(hpFilt);
+%fvtool(hpFilt);
+d         = filter(hpFilt, d);
+EEG_clean = filter(hpFilt, EEG_clean);
 
 %% run through 
 

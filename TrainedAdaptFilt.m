@@ -3,6 +3,9 @@ load("sim4_5data.mat");
 g = squeeze(noise_g.Data); 
 d = squeeze(unfiltered_d.Data);
 t = unfiltered_d.Time;
+load('20210715_1048.mat_EyesOpen_Trial1.mat');
+t_clean   = TimesAboveData(1,:);
+EEG_clean = TimesAboveData(2,:)*1e-6; % V
 
 %% identify parameters for filter and training 
 trainfrac = .5;
@@ -33,7 +36,8 @@ e_t = zeros(1,nEpoch);
 
 % train w: iterate grad descent 
 figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 
-subplot(211); wplot = stem(w); subplot(212); eplot = semilogy(e_t);
+subplot(211); wplot = stem(w); grid on; 
+subplot(212); eplot = semilogy(e_t); grid on;
 pause(.5);
 for ep = 1:nEpoch
     E = D - G*w;
@@ -61,4 +65,6 @@ e_train = d_train; e_train(N:end) = e_train(N:end) - op_train;
 op_test = G_test*w;
 e_test = d_test; e_test(N:end) = e_test(N:end) - op_test;
 figure; plot(t_train, e_train); hold on; plot(t_test, e_test);
-xlabel('time (s)'); ylabel('filtered signal (V)'); legend('train', 'test');
+hold on; plot(t_clean, EEG_clean); 
+grid on;
+xlabel('time (s)'); ylabel('filtered signal (V)'); legend('train', 'test', 'original');

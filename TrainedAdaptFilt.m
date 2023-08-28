@@ -31,9 +31,9 @@ EEG_clean = filter(hpFilt, EEG_clean_unfilt);
 
 % split testing and training 
 splIdx = floor(trainfrac*length(t));
-t_train = t(1:splIdx); t_test = t((splIdx+1):end);
-g_train = g(1:splIdx); g_test = g((splIdx+1):end);
-d_train = d(1:splIdx); d_test = d((splIdx+1):end);
+t_test = t(1:splIdx); t_train = t((splIdx+1):end);
+g_test = g(1:splIdx); g_train = g((splIdx+1):end);
+d_test = d(1:splIdx); d_train = d((splIdx+1):end);
 
 % organize training epochs 
 G = zeros(length(t_train)-N+1, N); 

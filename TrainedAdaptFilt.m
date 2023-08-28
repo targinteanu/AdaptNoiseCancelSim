@@ -1,32 +1,31 @@
 %% load data from file 
 load("sim4_5data.mat");
 g = squeeze(noise_g.Data); 
-d = squeeze(unfiltered_d.Data);
+d_unfilt = squeeze(unfiltered_d.Data);
 t = unfiltered_d.Time;
 load('20210715_1048.mat_EyesOpen_Trial1.mat');
 t_clean   = TimesAboveData(1,:);
-EEG_clean = TimesAboveData(2,:)*1e-6; % V
-EEG_clean = interp1(t_clean, EEG_clean, t); %EEG_clean now corresponds to t
-EEG_clean_unfilt = EEG_clean; d_unfilt = d;
+EEG_clean_unfilt = TimesAboveData(2,:)*1e-6; % V
+EEG_clean_unfilt = interp1(t_clean, EEG_clean_unfilt, t); %EEG_clean now corresponds to t
 
 %% identify parameters for filter and training 
 trainfrac = .5;
 N = 256; % filter taps 
 stepsize = 1e7;
 nEpoch = 2500;
-nUpdates = 500;
+nUpdates = 100;
 
 %% highpass filtering (baseline removal) 
-hpFilt = designfilt('highpassfir', ...
+hpFilt = designfilt('highpassiir', ...
                     'StopbandFrequency', .5, ...
                     'PassbandFrequency', 1.5, ...
                     'PassbandRipple', .5, ...
                     'StopbandAttenuation', 60, ...
                     'SampleRate', 1000, ...
-                    'DesignMethod', 'kaiserwin');
-fvtool(hpFilt);
-d         = filter(hpFilt, d);
-EEG_clean = filter(hpFilt, EEG_clean);
+                    'DesignMethod', 'butter');
+%fvtool(hpFilt);
+d         = filter(hpFilt, d_unfilt);
+EEG_clean = filter(hpFilt, EEG_clean_unfilt);
 
 %% run through 
 

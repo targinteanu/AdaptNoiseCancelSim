@@ -10,7 +10,7 @@ EEG_clean_unfilt = interp1(t_clean, EEG_clean_unfilt, t); %EEG_clean now corresp
 
 %% identify parameters for filter and training 
 trainfrac = .5;
-N = 256; % filter taps 
+N = 128; % filter taps 
 stepsize = 1e7;
 nEpoch = 2500;
 nUpdates = 100;

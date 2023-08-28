@@ -44,8 +44,8 @@ for nf = 1:(length(t_train)-N+1)
     G(nf,:) = g_train(nf:(nf+N-1));
     T(nf,:) = t_train(nf:(nf+N-1));
 end
-%W = zeros(size(G));
-w = zeros(N,1);
+%w = zeros(N,1);
+w = -exp(8.724)*exp(-2786*t); w(1) = 4e4; w = w(1:N); w = flipud(w); w = -w/100;
 e_t = zeros(1,nEpoch);
 
 % train w: iterate grad descent 

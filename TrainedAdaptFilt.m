@@ -71,6 +71,24 @@ for nf = 1:(length(t_test)-N+1)
     T_test(nf,:) = t_test(nf:(nf+N-1));
 end
 
+%% online LMS for comparison 
+w_OL = zeros(N,1);
+e_t = zeros(size(d_train));
+
+% train w: iterate grad descent 
+figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 
+subplot(211); wplot = stem(w_OL); grid on; 
+subplot(212); eplot = semilogy(e_t); grid on;
+pause(.5);
+for ep = 1:size(G,1)
+    E = D(ep) - G(ep,:)*w_OL;
+    e_t(ep) = E;
+    dw = E*G(ep,:)';
+    w_OL = w_OL + stepsize*dw;
+    wplot.YData = w_OL; eplot.YData = e_t.^2;
+    pause(eps);
+end
+
 %% demo final signal 
 op_train = G*w;
 e_train = d_train; e_train(N:end) = e_train(N:end) - op_train;
@@ -78,5 +96,7 @@ op_test = G_test*w;
 e_test = d_test; e_test(N:end) = e_test(N:end) - op_test;
 figure; plot(t_clean, EEG_clean, 'k', 'LineWidth', 1); 
 hold on; plot(t_train, e_train); plot(t_test, e_test);
+plot(t_train(N:end), e_t); 
 grid on;
-xlabel('time (s)'); ylabel('filtered signal (V)'); legend('original', 'train', 'test');
+xlabel('time (s)'); ylabel('filtered signal (V)'); 
+legend('original', 'train', 'test', 'online');

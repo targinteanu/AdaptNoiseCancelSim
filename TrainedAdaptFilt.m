@@ -7,7 +7,7 @@ load('20210715_1048.mat_EyesOpen_Trial1.mat');
 t_clean   = TimesAboveData(1,:);
 EEG_clean = TimesAboveData(2,:)*1e-6; % V
 EEG_clean = interp1(t_clean, EEG_clean, t); %EEG_clean now corresponds to t
-EEG_clean_unfilt = EEG_clean;
+EEG_clean_unfilt = EEG_clean; d_unfilt = d;
 
 %% identify parameters for filter and training 
 trainfrac = .5;
@@ -23,8 +23,8 @@ hpFilt = designfilt('highpassfir', ...
                     'PassbandRipple', .5, ...
                     'StopbandAttenuation', 60, ...
                     'SampleRate', 1000, ...
-                    'DesignMethod', 'equiripple');
-%fvtool(hpFilt);
+                    'DesignMethod', 'kaiserwin');
+fvtool(hpFilt);
 d         = filter(hpFilt, d);
 EEG_clean = filter(hpFilt, EEG_clean);
 

@@ -47,6 +47,7 @@ end
 w = zeros(N,1);
 e_t = zeros(1,nEpoch);
 
+%{
 % train w: iterate grad descent 
 figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 
 subplot(211); wplot = errorbar(w, w, 'x'); grid on; 
@@ -65,6 +66,9 @@ for ep = 1:nEpoch
         pause(eps);
     end
 end
+%}
+w = (((G'*G)^-1)*G')*D;
+figure; stem(w);
 
 % organize testing epochs 
 G_test = zeros(length(t_test)-N+1, N); 

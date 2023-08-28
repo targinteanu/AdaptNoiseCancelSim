@@ -12,7 +12,7 @@ EEG_clean_unfilt = interp1(t_clean, EEG_clean_unfilt, t); %EEG_clean now corresp
 trainfrac = .5;
 N = 128; % filter taps 
 stepsize = 1e7;
-nEpoch = 2500;
+nEpoch = 50000;
 nUpdates = 100;
 
 %% highpass filtering (baseline removal) 
@@ -44,8 +44,7 @@ for nf = 1:(length(t_train)-N+1)
     G(nf,:) = g_train(nf:(nf+N-1));
     T(nf,:) = t_train(nf:(nf+N-1));
 end
-%w = zeros(N,1);
-w = -exp(8.724)*exp(-2786*t); w(1) = 4e4; w = w(1:N); w = flipud(w); w = -w/100;
+w = zeros(N,1);
 e_t = zeros(1,nEpoch);
 
 % train w: iterate grad descent 

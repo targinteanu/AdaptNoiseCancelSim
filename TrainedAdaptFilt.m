@@ -102,7 +102,7 @@ op_test = G_test*w;
 e_test = d_test; e_test(N:end) = e_test(N:end) - op_test;
 figure; plot(t, EEG_clean, 'k', 'LineWidth', 1); hold on;
 plot(t_train, e_train); plot(t_test, e_test);
-plot(t_train, e_t); 
+plot(t_train(N:end), e_t); 
 grid on;
 xlabel('time (s)'); ylabel('filtered signal (V)'); 
 legend('original', 'train', 'test', 'online');

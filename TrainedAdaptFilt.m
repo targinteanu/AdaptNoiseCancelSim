@@ -53,7 +53,7 @@ subplot(212); eplot = semilogy(e_t); grid on;
 pause(.5);
 for ep = 1:nEpoch
     E = D - G*w;
-    e_t(ep) = mean(E);
+    e_t(ep) = mean(E.^2);
     dW = E.*G;
     dw = mean(dW,1)';
     w = w + stepsize*dw;

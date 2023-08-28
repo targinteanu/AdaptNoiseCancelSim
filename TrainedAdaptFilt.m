@@ -77,7 +77,7 @@ end
 
 %% online LMS for comparison 
 w_OL = zeros(N,1);
-e_t = zeros(size(d_train));
+e_t = zeros(size(G,1),1);
 
 % train w: iterate grad descent 
 figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 

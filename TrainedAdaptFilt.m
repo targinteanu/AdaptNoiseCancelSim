@@ -50,7 +50,7 @@ e_t = zeros(1,nEpoch);
 
 % train w: iterate grad descent 
 figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 
-subplot(211); wplot = stem(w); grid on; 
+subplot(211); wplot = errorbar(w, w, 'x'); grid on; 
 subplot(212); eplot = semilogy(e_t); grid on;
 pause(.5);
 for ep = 1:nEpoch
@@ -61,6 +61,8 @@ for ep = 1:nEpoch
     w = w + stepsize*dw;
     if ~mod(ep, floor(nEpoch/nUpdates))
         wplot.YData = w; eplot.YData = e_t;
+        wplot.YNegativeDelta = stepsize*std(dW, [], 1)/2; 
+        wplot.YPositiveDelta = stepsize*std(dW, [], 1)/2;
         pause(eps);
     end
 end

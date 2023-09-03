@@ -60,7 +60,7 @@ t        = zeros(size(T,1)  *size(T,2),   length(uchan));
 g        = zeros(size(G,1)  *size(G,2),   length(uchan));
 d_unfilt = zeros(size(dta,1)*size(dta,2), length(uchan));
 for idx = 1:length(uchan)
-    Tidx = T(:,:,idx); Gidx = G(:,:,idx); Didx = dta(:,:,idx);
+    Tidx = T(:,:,idx)'; Gidx = G(:,:,idx)'; Didx = dta(:,:,idx)';
     t(:,idx)        = Tidx(:);
     g(:,idx)        = Gidx(:);
     d_unfilt(:,idx) = Didx(:);

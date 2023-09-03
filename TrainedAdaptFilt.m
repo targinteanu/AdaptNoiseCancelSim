@@ -78,8 +78,8 @@ for ep = 1:nEpoch
 end
 %}
 dG = diff(G); dD = diff(D);
-%w = (((G'*G)^-1)*G')*D;
-w = (((dG'*dG)^-1)*dG')*dD;
+w = (((G'*G)^-1)*G')*D;
+%w = (((dG'*dG)^-1)*dG')*dD;
 figure; stem(w);
 
 % organize testing epochs 
@@ -104,8 +104,8 @@ pause(.5);
 for ep = 2:size(G,1)
     E = D(ep) - G(ep,:)*w_OL;
     e_t(ep) = E;
-%    dw = E*G(ep,:)';
-    dw = (E-e_t(ep-1)) * (G(ep,:)-G(ep-1,:))';
+    dw = E*G(ep,:)';
+%    dw = (E-e_t(ep-1)) * (G(ep,:)-G(ep-1,:))';
     w_OL = w_OL + stepsize*dw;
     if ~mod(ep, floor(size(G,1)/nUpdates))
         wplot.YData = w_OL; eplot.YData = e_t.^2;

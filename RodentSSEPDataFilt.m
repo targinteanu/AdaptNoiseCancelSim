@@ -1,7 +1,7 @@
 %% load file
 TDTPATH = 'TDTMatlabSDK';
 addpath(genpath(TDTPATH));
-data = TDTbin2mat('AC5-230830-130841/AC5-230830-130841');
+data = TDTbin2mat('Rodent SSEP Data/AC5-230830-130841/AC5-230830-130841');
 
 %% define parameters of stim 
 % monophasic, fixed
@@ -28,16 +28,21 @@ dta_t_chan = cell(2, length(uchan));
 for idx = 1:length(uchan)
     ch = uchan(idx);
     chIdx = chan == ch;
-    dta_t_chan(1, idx) =  dta(chIdx,:);
-    dta_t_chan(2, idx) = t_stim(chIdx);
+    dta_t_chan{1, idx} =  dta(chIdx,:);
+    dta_t_chan{2, idx} = t_stim(chIdx);
 end
 
-dta = zeros([size(dta_t_chan(1,1)), length(uchan)]);
-t_stim = zeros([length(dta_t_chan(2,1)), length(uchan)]);
+dta = zeros([size(dta_t_chan{1,1}), length(uchan)]);
+t_stim = zeros([length(dta_t_chan{2,1}), length(uchan)]);
 for idx = 1:length(uchan)
-    dta(:,:,idx)  = dta_t_chan(1, idx);
-    t_stim(:,idx) = dta_t_chan(2, idx);
+    dta(:,:,idx)  = dta_t_chan{1, idx};
+    t_stim(:,idx) = dta_t_chan{2, idx};
 end
 
-t_trl = (1:size(dta, 2)/fs) - .3; % ~ -.3 to +1 s
-g_trl = t_trl; % noise reference, uA
+t_trl = (1:size(dta, 2))/fs - .3; % ~ -.3 to +1 s
+g_trl = (AmpA/1000)*((t_trl >= 0)&(t_trl < DurA/1000)); % noise reference, mA
+
+t = zeros(size(dta));
+for idx = 1:length(uchan)
+    t(:,:,idx) = t_stim(:,idx) + t_trl;
+end

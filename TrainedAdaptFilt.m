@@ -8,14 +8,15 @@ t_clean   = TimesAboveData(1,:);
 EEG_clean_unfilt = TimesAboveData(2,:)*1e-6; % V
 EEG_clean_unfilt = interp1(t_clean, EEG_clean_unfilt, t); %EEG_clean now corresponds to t
 
-%% identify parameters for filter and training 
+%% define parameters for filter and training 
 trainfrac = .5;
 N = 128; % filter taps 
 stepsize = 1e7;
 nEpoch = 50000;
 nUpdates = 100;
 
-%% highpass filtering (baseline removal) 
+%% pre-filtering
+% highpass filtering (baseline removal) 
 hpFilt = designfilt('highpassiir', ...
                     'StopbandFrequency', .5, ...
                     'PassbandFrequency', 1.5, ...
@@ -23,9 +24,18 @@ hpFilt = designfilt('highpassiir', ...
                     'StopbandAttenuation', 60, ...
                     'SampleRate', 1000, ...
                     'DesignMethod', 'butter');
+% lowpass filtering (noise removal)
+lpFilt = designfilt('lowpassiir', ...
+                    'StopbandFrequency', 40, ...
+                    'PassbandFrequency', 38, ...
+                    'PassbandRipple', .5, ...
+                    'StopbandAttenuation', 60, ...
+                    'SampleRate', 1000, ...
+                    'DesignMethod', 'butter');
 %fvtool(hpFilt);
 d         = filter(hpFilt, d_unfilt);
 EEG_clean = filter(hpFilt, EEG_clean_unfilt);
+EEG_clean = filter(lpFilt, EEG_clean);
 
 %% run through 
 
@@ -103,11 +113,17 @@ for ep = 2:size(G,1)
     end
 end
 
-%% demo final signal 
+%% post-processing and filtering 
 op_train = G*w;
 e_train = d_train; e_train(N:end) = e_train(N:end) - op_train;
 op_test = G_test*w;
 e_test = d_test; e_test(N:end) = e_test(N:end) - op_test;
+
+e_train = filter(lpFilt, e_train);
+e_test  = filter(lpFilt, e_test);
+e_t     = filter(lpFilt, e_t);
+
+%% demo final signal 
 figure; plot(t, EEG_clean, 'k', 'LineWidth', 1); hold on;
 plot(t_train, e_train); plot(t_test, e_test);
 plot(t_train(N:end), e_t); 

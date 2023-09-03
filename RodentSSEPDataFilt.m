@@ -49,11 +49,12 @@ for idx = 1:length(uchan)
 end
 
 %% define parameters for filter and training 
-trainfrac = .5;
+trainfrac = .2;
 N = 128; % filter taps 
 stepsize = 1e7;
 nEpoch = 50000;
 nUpdates = 100;
+maxBlockSize = 3e6; % time points 
 
 %% "linearize" trial blocks 
 t        = zeros(size(T,1)  *size(T,2),   length(uchan));
@@ -93,6 +94,7 @@ splIdx = floor(trainfrac*size(t,1));
 t_train = t(1:splIdx, :); t_test = t((splIdx+1):end, :);
 g_train = g(1:splIdx, :); g_test = g((splIdx+1):end, :);
 d_train = d(1:splIdx, :); d_test = d((splIdx+1):end, :);
+% reduce training size to fit within max block size
 
 % organize training epochs 
 G = zeros(size(t_train,1)-N+1, N, length(uchan)); 
@@ -175,7 +177,8 @@ for idx = 1:length(uchan)
 end
 
 %% post-processing and filtering 
-op_train = zeros(size(t_train)); op_test = zeros(size(t_test));
+op_train = zeros([size(t_train,1)-N+1,size(t_train,2)]); 
+op_test  = zeros([size(t_test,1) -N+1,size(t_test, 2)]);
 for idx = 1:length(uchan)
     op_train(:,idx) = G(:,:,idx)     *w(:,idx);
     op_test(:,idx)  = G_test(:,:,idx)*w(:,idx);

@@ -51,7 +51,7 @@ end
 %% define parameters for filter and training 
 trainfrac = .1;
 N = 128; % filter taps 
-stepsize = 1e7;
+stepsize = 1e-3;
 nEpoch = 50000;
 nUpdates = 100;
 maxBlockSize = 3e6; % time points 
@@ -66,6 +66,10 @@ for idx = 1:length(uchan)
     g(:,idx)        = Gidx(:);
     d_unfilt(:,idx) = Didx(:);
 end
+
+%% cleanup 
+clear T G dta dta_t_chan
+clear g_trl t_trl t_stim chan ch chIdx 
 
 %% pre-filtering
 % highpass filtering (baseline removal) 
@@ -177,6 +181,8 @@ for idx = 1:length(uchan)
 end
 
 %% testing  
+% needs to be changed away from 3D array structure to make a new G matrix
+% every step and then delete it 
 op_test = zeros([size(t_test,1)-N+1,size(t_test, 2),nTestBlocks]);
 for blc = 1:nTestBlocks
     % organize testing epochs

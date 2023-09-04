@@ -49,7 +49,7 @@ for idx = 1:length(uchan)
 end
 
 %% define parameters for filter and training 
-trainfrac = .2;
+trainfrac = .1;
 N = 128; % filter taps 
 stepsize = 1e7;
 nEpoch = 50000;
@@ -94,7 +94,19 @@ splIdx = floor(trainfrac*size(t,1));
 t_train = t(1:splIdx, :); t_test = t((splIdx+1):end, :);
 g_train = g(1:splIdx, :); g_test = g((splIdx+1):end, :);
 d_train = d(1:splIdx, :); d_test = d((splIdx+1):end, :);
-% reduce training size to fit within max block size
+% reduce testing size to fit within max block size
+nTestBlocks = ceil(size(t_test,1)/maxBlockSize);
+lTestBlock = size(t_test,1)/nTestBlocks;
+if mod(lTestBlock, 1)
+    nTestBlocks = nTestBlocks-1;
+    lTestBlock = floor(lTestBlock);
+end
+t_test = t_test(1:(nTestBlocks*lTestBlock),:);
+t_test = reshape(t_test, [lTestBlock, size(t_test,2), nTestBlocks]);
+g_test = g_test(1:(nTestBlocks*lTestBlock),:);
+g_test = reshape(g_test, [lTestBlock, size(g_test,2), nTestBlocks]);
+d_test = d_test(1:(nTestBlocks*lTestBlock),:);
+d_test = reshape(d_test, [lTestBlock, size(d_test,2), nTestBlocks]);
 
 % organize training epochs 
 G = zeros(size(t_train,1)-N+1, N, length(uchan)); 
@@ -105,18 +117,6 @@ for idx = 1:length(uchan)
     for nf = 1:(size(t_train,1)-N+1)
         G(nf,:,idx) = g_train(nf:(nf+N-1), idx);
         T(nf,:,idx) = t_train(nf:(nf+N-1), idx);
-    end
-end
-
-% organize testing epochs 
-G_test = zeros(size(t_test,1)-N+1, N, length(uchan)); 
-T_test = zeros(size(G_test)); 
-D_test = zeros(size(t_test,1)-N+1, length(uchan));
-for idx = 1:length(uchan)
-    D_test(:,idx) = d_test(N:size(t_test,1), idx);
-    for nf = 1:(size(t_train,1)-N+1)
-        G_test(nf,:,idx) = g_test(nf:(nf+N-1), idx);
-        T_test(nf,:,idx) = t_test(nf:(nf+N-1), idx);
     end
 end
 
@@ -176,13 +176,39 @@ for idx = 1:length(uchan)
     end
 end
 
+%% testing  
+op_test = zeros([size(t_test,1)-N+1,size(t_test, 2),nTestBlocks]);
+for blc = 1:nTestBlocks
+    % organize testing epochs
+    G_test = zeros(size(t_test,1)-N+1, N, length(uchan));
+    T_test = zeros(size(G_test));
+    D_test = zeros(size(t_test,1)-N+1, length(uchan));
+    for idx = 1:length(uchan)
+        D_test(:,idx) = d_test(N:size(t_test,1), idx);
+        for nf = 1:(size(t_train,1)-N+1)
+            G_test(nf,:,idx) = g_test(nf:(nf+N-1), idx, blc);
+            T_test(nf,:,idx) = t_test(nf:(nf+N-1), idx, blc);
+        end
+    end
+
+    for idx = 1:length(uchan)
+        op_test(:,idx,blc) = G_test(:,:,idx)*w(:,idx);
+    end
+end
+
 %% post-processing and filtering 
 op_train = zeros([size(t_train,1)-N+1,size(t_train,2)]); 
-op_test  = zeros([size(t_test,1) -N+1,size(t_test, 2)]);
+%op_test  = zeros([size(t_test,1) -N+1,size(t_test, 2)]);
 for idx = 1:length(uchan)
     op_train(:,idx) = G(:,:,idx)     *w(:,idx);
-    op_test(:,idx)  = G_test(:,:,idx)*w(:,idx);
+%    op_test(:,idx)  = G_test(:,:,idx)*w(:,idx);
 end
+
+op_test = reshape(op_test, [size(op_test,1)*size(op_test,3),size(op_test,2)]);
+d_test = reshape(d_test, [size(d_test,1)*size(d_test,3),size(d_test,2)]);
+t_test = reshape(t_test, [size(t_test,1)*size(t_test,3),size(t_test,2)]);
+g_test = reshape(g_test, [size(g_test,1)*size(g_test,3),size(g_test,2)]);
+
 e_train = d_train; e_train(N:end,:) = e_train(N:end,:) - op_train;
 e_test = d_test; e_test(N:end,:) = e_test(N:end,:) - op_test;
 

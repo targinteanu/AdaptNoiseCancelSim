@@ -51,7 +51,7 @@ end
 %% define parameters for filter and training 
 trainfrac = .1;
 N = 128; % filter taps 
-stepsize = 1e-3;
+stepsize = 1e-2;
 nEpoch = 50000;
 nUpdates = 100;
 maxBlockSize = 3e6; % time points 

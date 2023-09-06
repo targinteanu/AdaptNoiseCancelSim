@@ -157,6 +157,15 @@ for idx = 1:length(uchan)
 end
 figure; stem(w);
 
+%% testing  
+op_test = zeros(size(t_test,1)-N+1, length(uchan));
+for idx = 1:length(uchan)
+    for ep = (N:length(t_test,1))-N+1 
+        Gidx = g_test((1:N)+ep-1, idx);
+        op_test(ep,idx) = Gidx*w(:,idx);
+    end
+end
+
 %% online LMS for comparison 
 w_OL = zeros(N, length(uchan));
 e_t = zeros(size(t,1)-N+1, length(uchan));
@@ -179,26 +188,6 @@ for idx = 1:length(uchan)
             wplot.YData = w_OL(:,idx); eplot.YData = e_t(:,idx).^2;
             pause(eps);
         end
-    end
-end
-
-%% testing  
-op_test = zeros([size(t_test,1)-N+1,size(t_test, 2),nTestBlocks]);
-for blc = 1:nTestBlocks
-    % organize testing epochs
-    G_test = zeros(size(t_test,1)-N+1, N, length(uchan));
-    T_test = zeros(size(G_test));
-    D_test = zeros(size(t_test,1)-N+1, length(uchan));
-    for idx = 1:length(uchan)
-        D_test(:,idx) = d_test(N:size(t_test,1), idx);
-        for nf = 1:(size(t_train,1)-N+1)
-            G_test(nf,:,idx) = g_test(nf:(nf+N-1), idx, blc);
-            T_test(nf,:,idx) = t_test(nf:(nf+N-1), idx, blc);
-        end
-    end
-
-    for idx = 1:length(uchan)
-        op_test(:,idx,blc) = G_test(:,:,idx)*w(:,idx);
     end
 end
 

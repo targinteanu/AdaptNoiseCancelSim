@@ -159,17 +159,19 @@ figure; stem(w);
 
 %% online LMS for comparison 
 w_OL = zeros(N, length(uchan));
-e_t = zeros(size(G,1), length(uchan));
+e_t = zeros(size(t,1)-N+1, length(uchan));
 
 for idx = 1:length(uchan)
     % train w: iterate grad descent
-    Gidx = G(:,:,idx); Didx = D(:,idx);
+%    Gidx = G(:,:,idx); Didx = D(:,idx);
     figure('Units','normalized', 'Position',[.1 .1 .8 .8]);
     subplot(211); wplot = stem(w_OL(:,idx)); grid on;
     subplot(212); eplot = semilogy(e_t(:,idx)); grid on;
     pause(.5);
-    for ep = 2:size(Gidx,1)
-        E = Didx(ep) - Gidx(ep,:)*w_OL(:,idx);
+    for ep = (N:length(t,1))-N+1
+        Gidx = g((1:N)+ep-1, idx);
+        Didx = d((1:N)+ep-1, idx);
+        E = Didx(ep) - Gidx*w_OL(:,idx);
         e_t(ep, idx) = E;
         dw = E*Gidx(ep,:)';
         w_OL(:,idx) = w_OL(:,idx) + stepsize*dw;
@@ -181,8 +183,6 @@ for idx = 1:length(uchan)
 end
 
 %% testing  
-% needs to be changed away from 3D array structure to make a new G matrix
-% every step and then delete it 
 op_test = zeros([size(t_test,1)-N+1,size(t_test, 2),nTestBlocks]);
 for blc = 1:nTestBlocks
     % organize testing epochs
@@ -228,7 +228,7 @@ figure;
 for idx = 1:length(uchan)
     plot(t(:,idx), d(:,idx), 'k', 'LineWidth', 1); hold on;
     plot(t_train(:,idx), e_train(:,idx)); plot(t_test(:,idx), e_test(:,idx));
-    plot(t_train(N:end,idx), e_t(:,idx));
+    plot(t(N:end,idx), e_t(:,idx));
     grid on;
     xlabel('time (s)'); ylabel('filtered signal (V)');
     legend('original', 'train', 'test', 'online');

@@ -99,6 +99,7 @@ t_train = t(1:splIdx, :); t_test = t((splIdx+1):end, :);
 g_train = g(1:splIdx, :); g_test = g((splIdx+1):end, :);
 d_train = d(1:splIdx, :); d_test = d((splIdx+1):end, :);
 % reduce testing size to fit within max block size
+%{
 nTestBlocks = ceil(size(t_test,1)/maxBlockSize);
 lTestBlock = size(t_test,1)/nTestBlocks;
 if mod(lTestBlock, 1)
@@ -111,6 +112,7 @@ g_test = g_test(1:(nTestBlocks*lTestBlock),:);
 g_test = reshape(g_test, [lTestBlock, size(g_test,2), nTestBlocks]);
 d_test = d_test(1:(nTestBlocks*lTestBlock),:);
 d_test = reshape(d_test, [lTestBlock, size(d_test,2), nTestBlocks]);
+%}
 
 % organize training epochs 
 G = zeros(size(t_train,1)-N+1, N, length(uchan)); 
@@ -160,8 +162,8 @@ figure; stem(w);
 %% testing  
 op_test = zeros(size(t_test,1)-N+1, length(uchan));
 for idx = 1:length(uchan)
-    for ep = (N:length(t_test,1))-N+1 
-        Gidx = g_test((1:N)+ep-1, idx);
+    for ep = (N:size(t_test,1))-N+1 
+        Gidx = g_test((1:N)+ep-1, idx)';
         op_test(ep,idx) = Gidx*w(:,idx);
     end
 end
@@ -177,14 +179,14 @@ for idx = 1:length(uchan)
     subplot(211); wplot = stem(w_OL(:,idx)); grid on;
     subplot(212); eplot = semilogy(e_t(:,idx)); grid on;
     pause(.5);
-    for ep = (N:length(t,1))-N+1
-        Gidx = g((1:N)+ep-1, idx);
-        Didx = d((1:N)+ep-1, idx);
-        E = Didx(ep) - Gidx*w_OL(:,idx);
+    for ep = (N:size(t,1))-N+1
+        Gidx = g((1:N)+ep-1, idx)';
+        %Didx = d((1:N)+ep-1, idx);
+        E = d(ep+N-1) - Gidx*w_OL(:,idx);
         e_t(ep, idx) = E;
-        dw = E*Gidx(ep,:)';
+        dw = E*Gidx';
         w_OL(:,idx) = w_OL(:,idx) + stepsize*dw;
-        if ~mod(ep, floor(size(Gidx,1)/nUpdates))
+        if ~mod(ep, floor(size(t,1)/nUpdates))
             wplot.YData = w_OL(:,idx); eplot.YData = e_t(:,idx).^2;
             pause(eps);
         end
@@ -199,10 +201,12 @@ for idx = 1:length(uchan)
 %    op_test(:,idx)  = G_test(:,:,idx)*w(:,idx);
 end
 
+%{
 op_test = reshape(op_test, [size(op_test,1)*size(op_test,3),size(op_test,2)]);
 d_test = reshape(d_test, [size(d_test,1)*size(d_test,3),size(d_test,2)]);
 t_test = reshape(t_test, [size(t_test,1)*size(t_test,3),size(t_test,2)]);
 g_test = reshape(g_test, [size(g_test,1)*size(g_test,3),size(g_test,2)]);
+%}
 
 e_train = d_train; e_train(N:end,:) = e_train(N:end,:) - op_train;
 e_test = d_test; e_test(N:end,:) = e_test(N:end,:) - op_test;
@@ -213,8 +217,8 @@ e_t     = filter(lpFilt, e_t);
 d       = filter(lpFilt, d);
 
 %% demo final signal 
-figure; 
 for idx = 1:length(uchan)
+    figure; 
     plot(t(:,idx), d(:,idx), 'k', 'LineWidth', 1); hold on;
     plot(t_train(:,idx), e_train(:,idx)); plot(t_test(:,idx), e_test(:,idx));
     plot(t(N:end,idx), e_t(:,idx));

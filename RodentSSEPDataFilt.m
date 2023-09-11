@@ -51,10 +51,8 @@ end
 %% define parameters for filter and training 
 trainfrac = .1;
 N = 128; % filter taps 
-stepsize = 1e-1;
-nEpoch = 50000;
+stepsize = 1;
 nUpdates = 100;
-maxBlockSize = 3e6; % time points 
 
 %% "linearize" trial blocks 
 t        = zeros(size(T,1)  *size(T,2),   length(uchan));
@@ -91,7 +89,7 @@ lpFilt = designfilt('lowpassiir', ...
 %fvtool(hpFilt);
 d         = filter(hpFilt, d_unfilt);
 
-%% organize into testing and training epochs
+%% organize into testing and training 
 
 % split testing and training 
 splIdx = floor(trainfrac*size(t,1));
@@ -111,57 +109,44 @@ for idx = 1:length(uchan)
     end
 end
 
-%% run through 
-
-%{
-w = zeros(N,1);
-e_t = zeros(1,nEpoch);
-
-% train w: iterate grad descent 
-figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 
-subplot(211); wplot = errorbar(w, w, 'x'); grid on; 
-subplot(212); eplot = semilogy(e_t); grid on;
-pause(.5);
-for ep = 1:nEpoch
-    E = D - G*w;
-    e_t(ep) = mean(E.^2);
-    dW = E.*G;
-    dw = mean(dW,1)';
-    w = w + stepsize*dw;
-    if ~mod(ep, floor(nEpoch/nUpdates))
-        wplot.YData = w; eplot.YData = e_t;
-        wplot.YNegativeDelta = stepsize*std(dW, [], 1)/2; 
-        wplot.YPositiveDelta = stepsize*std(dW, [], 1)/2;
-        pause(eps);
-    end
-end
-%}
-
+%% training  
+figure('Units','normalized', 'Position',[.1 .1 .4 .8]);
 w = zeros(N, length(uchan));
 for idx = 1:length(uchan)
     Gidx = G(:,:,idx); Didx = D(:,idx);
     w(:,idx) = (((Gidx'*Gidx)^-1)*Gidx')*Didx;
+    subplot(length(uchan), 1, idx); stem(w(:,idx)); grid on;
+    title(['Channel ',num2str(uchan(idx)),' training']);
+    xlabel('tap'); ylabel('weight'); 
+    pause(eps);
 end
-figure; stem(w);
+pause(.5);
 
 %% testing  
 op_test = zeros(size(t_test,1)-N+1, length(uchan));
 for idx = 1:length(uchan)
     for ep = (N:size(t_test,1))-N+1 
+        if ~mod(ep, floor(size(t_test,1)/(.1*nUpdates)))
+            disp(['Testing Channel ',num2str(uchan(idx)),': ',num2str(100*ep/size(t_test,1)),'%']);
+        end
         Gidx = g_test((1:N)+ep-1, idx)';
         op_test(ep,idx) = Gidx*w(:,idx);
     end
 end
 
-%% online LMS for comparison 
+%% online LMS 
+figure('Units','normalized', 'Position',[.1 .1 .8 .8]);
 w_OL = zeros(N, length(uchan));
-e_t = zeros(size(t,1)-N+1, length(uchan));
+e_t = nan(size(t,1)-N+1, length(uchan));
 
 for idx = 1:length(uchan)
     % train w: iterate grad descent
-    figure('Units','normalized', 'Position',[.1 .1 .8 .8]);
-    subplot(211); wplot = stem(w_OL(:,idx)); grid on;
-    subplot(212); eplot = semilogy(e_t(:,idx)); grid on;
+    subplot(length(uchan),2,2*idx-1); wplot = stem(w_OL(:,idx));    grid on;
+    title(['Channel ',num2str(uchan(idx)),' online']);
+    xlabel('tap'); ylabel('weight');
+    subplot(length(uchan),2,2*idx);   eplot = semilogy(e_t(:,idx)); grid on;
+    title(['Channel ',num2str(uchan(idx)),' online']);
+    xlabel('timepoint'); ylabel('e^2');
     pause(.5);
     for ep = (N:size(t,1))-N+1
         Gidx = g((1:N)+ep-1, idx)';
@@ -170,7 +155,7 @@ for idx = 1:length(uchan)
         dw = E*Gidx';
         w_OL(:,idx) = w_OL(:,idx) + stepsize*dw;
         if ~mod(ep, floor(size(t,1)/nUpdates))
-            wplot.YData = w_OL(:,idx); eplot.YData = e_t(:,idx).^2;
+            wplot.YData = w_OL(:,idx); eplot.YData = movmean(e_t(:,idx).^2, 3000);
             pause(eps);
         end
     end
@@ -185,17 +170,17 @@ end
 e_train = d_train; e_train(N:end,:) = e_train(N:end,:) - op_train;
 e_test = d_test; e_test(N:end,:) = e_test(N:end,:) - op_test;
 
-e_train = filter(lpFilt, e_train);
-e_test  = filter(lpFilt, e_test);
-e_t     = filter(lpFilt, e_t);
-d       = filter(lpFilt, d);
+e_train_lpf = filter(lpFilt, e_train);
+e_test_lpf  = filter(lpFilt, e_test);
+e_t_lpf     = filter(lpFilt, e_t);
+d_lpf       = filter(lpFilt, d);
 
 %% demo final signal 
 for idx = 1:length(uchan)
     figure; 
-    plot(t(:,idx), d(:,idx), 'k', 'LineWidth', 1); hold on;
-    plot(t_train(:,idx), e_train(:,idx)); plot(t_test(:,idx), e_test(:,idx));
-    plot(t(N:end,idx), e_t(:,idx));
+    plot(t(:,idx), d_lpf(:,idx), 'k', 'LineWidth', 1); hold on;
+    plot(t_train(:,idx), e_train_lpf(:,idx)); plot(t_test(:,idx), e_test_lpf(:,idx));
+    plot(t(N:end,idx), e_t_lpf(:,idx));
     grid on;
     xlabel('time (s)'); ylabel('filtered signal (V)');
     legend('original', 'train', 'test', 'online');

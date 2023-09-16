@@ -51,7 +51,7 @@ end
 %% define parameters for filter and training 
 trainfrac = .1;
 N = 128; % filter taps 
-stepsize = 1;
+stepsize = .1;
 nUpdates = 100;
 
 %% "linearize" trial blocks 

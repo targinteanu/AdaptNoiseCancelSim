@@ -65,7 +65,43 @@ for idx = 1:length(uchan)
     d_unfilt(:,idx) = Didx(:);
 end
 
+% detect and fix inconsistencies in sampling 
+% t must be in columns!
+Dt = diff(t);
+dt_mean = mean(Dt(:));
+dt_min  = min(Dt(:));
+dt_err  = std(Dt(:));
+tLen = t(end,:) - t(1,:);
+if dt_err > .01*dt_mean
+    warning(['Inconsistent time steps; resampling at ',num2str(1/dt_min),' Hz']);
+    t_from_start = 0:dt_min:max(tLen);
+
+    t2 = zeros(length(t_from_start), length(uchan));
+    g2 = zeros(length(t_from_start), length(uchan));
+    d2 = zeros(length(t_from_start), length(uchan));
+
+    for idx = 1:length(uchan)
+        if tLen(idx) < max(tLen)
+            warning(['Channel ',num2str(uchan(idx)),' has shorter duration and may be end-padded']);
+        end
+        t_ch = t_from_start + t(1,idx);
+
+        t2(:,idx) = t_ch;
+        g2(:,idx) = interp1(t(:,idx),        g(:,idx), t_ch, 'nearest','extrap');
+        d2(:,idx) = interp1(t(:,idx), d_unfilt(:,idx), t_ch, 'nearest','extrap');
+    end
+    t        = t2; 
+    g        = g2; 
+    d_unfilt = d2; 
+
+    dt_mean = dt_min;
+end
+
+Fs = 1/dt_mean; % Hz
+
 %% cleanup 
+clear Dt dt_mean dt_min dt_err tLen
+clear t2 g2 d2
 clear T G dta dta_t_chan
 clear g_trl t_trl t_stim chan ch chIdx 
 
@@ -76,7 +112,7 @@ hpFilt = designfilt('highpassiir', ...
                     'PassbandFrequency', 1.5, ...
                     'PassbandRipple', .5, ...
                     'StopbandAttenuation', 60, ...
-                    'SampleRate', 1000, ...             FIX!!!
+                    'SampleRate', Fs, ... 
                     'DesignMethod', 'butter');
 % lowpass filtering (noise removal)
 lpFilt = designfilt('lowpassiir', ...
@@ -84,7 +120,7 @@ lpFilt = designfilt('lowpassiir', ...
                     'PassbandFrequency', 38, ...
                     'PassbandRipple', .5, ...
                     'StopbandAttenuation', 60, ...
-                    'SampleRate', 1000, ...             FIX!!!
+                    'SampleRate', Fs, ... 
                     'DesignMethod', 'butter');
 %fvtool(hpFilt);
 d         = filter(hpFilt, d_unfilt);

@@ -61,9 +61,13 @@ g        = zeros(size(G,1)  *size(G,2),   length(uchan));
 d_unfilt = zeros(size(dta,1)*size(dta,2), length(uchan));
 for idx = 1:length(uchan)
     Tidx = T(:,:,idx)'; Gidx = G(:,:,idx)'; Didx = dta(:,:,idx)';
-    t(:,idx)        = Tidx(:);
-    g(:,idx)        = Gidx(:);
-    d_unfilt(:,idx) = Didx(:);
+
+    % ensure correct order of timepoints 
+    [Tidx, ord] = sort(Tidx(:));
+
+    t(ord,idx)        = Tidx(:);
+    g(ord,idx)        = Gidx(:);
+    d_unfilt(ord,idx) = Didx(:);
 end
 
 % detect and fix inconsistencies in sampling 
@@ -101,7 +105,7 @@ end
 Fs = 1/dt_mean; % Hz
 
 %% cleanup 
-clear Dt dt_mean dt_min dt_err tLen
+clear Dt dt_mean dt_min dt_err tLen 
 clear t2 g2 d2
 clear T G dta dta_t_chan
 clear g_trl t_trl t_stim chan ch chIdx 

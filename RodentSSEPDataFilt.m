@@ -55,6 +55,7 @@ stepsize = .1;
 nUpdates = 100;
 
 %% "linearize" trial blocks 
+uchan = uchan(1); % comment out to get all chans
 t        = zeros(size(T,1)  *size(T,2),   length(uchan));
 g        = zeros(size(G,1)  *size(G,2),   length(uchan));
 d_unfilt = zeros(size(dta,1)*size(dta,2), length(uchan));
@@ -216,7 +217,7 @@ for idx = 1:length(uchan)
     figure; 
     plot(t(:,idx), d_lpf(:,idx), 'k', 'LineWidth', 1); hold on;
     plot(t_train(:,idx), e_train_lpf(:,idx)); plot(t_test(:,idx), e_test_lpf(:,idx));
-    plot(t(1:(end-N+1),idx), e_t_lpf(:,idx));
+    plot(t(N:end,idx), e_t_lpf(:,idx));
     grid on;
     xlabel('time (s)'); ylabel('filtered signal (V)');
     legend('original', 'train', 'test', 'online');

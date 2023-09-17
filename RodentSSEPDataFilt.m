@@ -51,7 +51,7 @@ end
 %% define parameters for filter and training 
 trainfrac = .1;
 N = 128; % filter taps 
-stepsize = .1;
+stepsize = .2;
 nUpdates = 100;
 
 %% "linearize" trial blocks 
@@ -121,8 +121,8 @@ hpFilt = designfilt('highpassiir', ...
                     'DesignMethod', 'butter');
 % lowpass filtering (noise removal)
 lpFilt = designfilt('lowpassiir', ...
-                    'StopbandFrequency', 40, ...
-                    'PassbandFrequency', 38, ...
+                    'StopbandFrequency', 500, ...
+                    'PassbandFrequency', 450, ...
                     'PassbandRipple', .5, ...
                     'StopbandAttenuation', 60, ...
                     'SampleRate', Fs, ... 
@@ -202,7 +202,7 @@ for idx = 1:length(uchan)
     end
 end
 
-%% post-processing and filtering 
+%% post-processing  
 op_train = zeros([size(t_train,1)-N+1,size(t_train,2)]); 
 for idx = 1:length(uchan)
     op_train(:,idx) = G(:,:,idx)     *w(:,idx);
@@ -211,6 +211,7 @@ end
 e_train = d_train; e_train(N:end,:) = e_train(N:end,:) - op_train;
 e_test = d_test; e_test(N:end,:) = e_test(N:end,:) - op_test;
 
+%% post-filtering
 e_train_lpf = filter(lpFilt, e_train);
 e_test_lpf  = filter(lpFilt, e_test);
 e_t_lpf     = filter(lpFilt, e_t);

@@ -121,8 +121,8 @@ hpFilt = designfilt('highpassiir', ...
                     'DesignMethod', 'butter');
 % lowpass filtering (noise removal)
 lpFilt = designfilt('lowpassiir', ...
-                    'StopbandFrequency', 5000, ...
-                    'PassbandFrequency', 4500, ...
+                    'StopbandFrequency', 1000, ...
+                    'PassbandFrequency', 900, ...
                     'PassbandRipple', .5, ...
                     'StopbandAttenuation', 60, ...
                     'SampleRate', Fs, ... 
@@ -212,19 +212,20 @@ e_train = d_train; e_train(N:end,:) = e_train(N:end,:) - op_train;
 e_test = d_test; e_test(N:end,:) = e_test(N:end,:) - op_test;
 
 %% post-filtering
-e_train_lpf = filtfilt(lpFilt, e_train);
-e_test_lpf  = filtfilt(lpFilt, e_test);
-e_t_lpf     = filtfilt(lpFilt, e_t);
-d_lpf       = filtfilt(lpFilt, d);
+e_train_lpf = filter(lpFilt, e_train);
+e_test_lpf  = filter(lpFilt, e_test);
+e_t_lpf     = filter(lpFilt, e_t);
+d_lpf       = filter(lpFilt, d);
 
 %% demo final signal 
 for idx = 1:length(uchan)
     figure; 
-    plot(t(:,idx), d_lpf(:,idx), 'k', 'LineWidth', 1); hold on;
-    plot(t_train(:,idx), e_train_lpf(:,idx)); plot(t_test(:,idx), e_test_lpf(:,idx));
-    plot(t(N:end,idx), e_t_lpf(:,idx));
+    plot(t(:,idx), d(:,idx), 'k', 'LineWidth', 1); hold on;
+%    plot(t_train(:,idx), e_train_lpf(:,idx)); plot(t_test(:,idx), e_test_lpf(:,idx));
+    plot(t(N:end,idx), e_t(:,idx));
     grid on;
     xlabel('time (s)'); ylabel('filtered signal (V)');
-    legend('original', 'train', 'test', 'online');
+%    legend('original', 'train', 'test', 'online');
+    legend('original', 'adaptive filtered');
     title(['channel ',num2str(uchan(idx))])
 end

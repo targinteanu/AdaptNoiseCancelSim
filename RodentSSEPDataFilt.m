@@ -310,7 +310,7 @@ for idx = 1:length(uchan)
 
     meanFiltBefore = mean(sigFiltCh(:,:,1));
     meanFiltAfter  = mean(sigFiltCh(:,:,2));
-    errbFiltBefore =  std(sigFiltCh(:,:,1));
+    errbFiltBefore =  std(sigFiltCh(:,:,1));f
     errbFiltAfter  =  std(sigFiltCh(:,:,2));
     meanUnfiltBefore = mean(sigUnfiltCh(:,:,1));
     meanUnfiltAfter  = mean(sigUnfiltCh(:,:,2));

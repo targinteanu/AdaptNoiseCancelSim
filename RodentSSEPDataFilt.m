@@ -196,7 +196,8 @@ for idx = 1:length(uchan)
         dw = E*Gidx';
         w_OL(:,idx) = w_OL(:,idx) + stepsize*dw;
         if ~mod(ep, floor(size(t,1)/nUpdates))
-            wplot.YData = w_OL(:,idx); eplot.YData = movmean(e_t(:,idx).^2, 3000);
+            wplot.YData = w_OL(:,idx); eplot.YData = movmean(e_t(:,idx).^2, 5000);
+            disp(['Online Channel ',num2str(uchan(idx)),': ',num2str(ep/size(t,1)),'%'])
             pause(eps);
         end
     end
@@ -212,9 +213,13 @@ e_train = d_train; e_train(N:end,:) = e_train(N:end,:) - op_train;
 e_test = d_test; e_test(N:end,:) = e_test(N:end,:) - op_test;
 
 %% post-filtering
+disp('LP Filtering Train Signal')
 e_train_lpf = filter(lpFilt, e_train);
+disp('LP Filtering Test Signal')
 e_test_lpf  = filter(lpFilt, e_test);
+disp('LP Filtering Online Signal')
 e_t_lpf     = filter(lpFilt, e_t);
+disp('LP Filtering Original Signal')
 d_lpf       = filter(lpFilt, d);
 
 %% demo final signal 

@@ -197,7 +197,7 @@ for idx = 1:length(uchan)
         w_OL(:,idx) = w_OL(:,idx) + stepsize*dw;
         if ~mod(ep, floor(size(t,1)/nUpdates))
             wplot.YData = w_OL(:,idx); eplot.YData = movmean(e_t(:,idx).^2, 5000);
-            disp(['Online Channel ',num2str(uchan(idx)),': ',num2str(ep/size(t,1)),'%'])
+            disp(['Online Channel ',num2str(uchan(idx)),': ',num2str(100*ep/size(t,1)),'%'])
             pause(eps);
         end
     end
@@ -240,7 +240,8 @@ xlim([336.351, 336.449])
 
 %% getting signals before and after stim  
 tBeforeTrig = .29; % s
-nBeforeTrig = tBeforeTrig*Fs; % samples
+nBeforeTrig = floor(tBeforeTrig*Fs); % samples
+tBeforeTrig = nBeforeTrig/Fs;
 t_PrePost = [-tBeforeTrig:(1/Fs):0; 0:(1/Fs):tBeforeTrig]; % [before; after]
 
 d_PrePost           = cell(1, length(uchan));
@@ -257,7 +258,7 @@ for idx = 1:length(uchan)
     trig = [0; abs(diff(gch))];
     trig = trig > .1*max(trig); trig = find(trig);
 
-    d_PrePost_ch           = zeros(length(trig), nBeforeTrig, 2);
+    d_PrePost_ch           = zeros(length(trig), nBeforeTrig+1, 2);
     d_lpf_PrePost_ch       = zeros(size(d_PrePost_ch));
     e_train_PrePost_ch     = zeros(size(d_PrePost_ch));
     e_train_lpf_PrePost_ch = zeros(size(d_PrePost_ch));
@@ -269,22 +270,22 @@ for idx = 1:length(uchan)
     for trIdx = 1:length(trig)
         tr = trig(trIdx); % timepoint
 
-        d_PrePost_ch(trIdx,:,1) = d(tr + (-nBeforeTrig):0);
-        d_PrePost_ch(trIdx,:,2) = d(tr +   0:nBeforeTrig );
-        d_lpf_PrePost_ch(trIdx,:,1) = d_lpf(tr + (-nBeforeTrig):0);
-        d_lpf_PrePost_ch(trIdx,:,2) = d_lpf(tr +   0:nBeforeTrig );
-        e_train_PrePost_ch(trIdx,:,1) = e_train(tr + (-nBeforeTrig):0);
-        e_train_PrePost_ch(trIdx,:,2) = e_train(tr +   0:nBeforeTrig );
-        e_train_lpf_PrePost_ch(trIdx,:,1) = e_train_lpf(tr + (-nBeforeTrig):0);
-        e_train_lpf_PrePost_ch(trIdx,:,2) = e_train_lpf(tr +   0:nBeforeTrig );
-        e_test_PrePost_ch(trIdx,:,1) = e_test(tr + (-nBeforeTrig):0);
-        e_test_PrePost_ch(trIdx,:,2) = e_test(tr +   0:nBeforeTrig );
-        e_test_lpf_PrePost_ch(trIdx,:,1) = e_test_lpf(tr + (-nBeforeTrig):0);
-        e_test_lpf_PrePost_ch(trIdx,:,2) = e_test_lpf(tr +   0:nBeforeTrig );
-        e_t_PrePost_ch(trIdx,:,1) = e_t(tr + (-nBeforeTrig):0);
-        e_t_PrePost_ch(trIdx,:,2) = e_t(tr +   0:nBeforeTrig );
-        e_t_lpf_PrePost_ch(trIdx,:,1) = e_t_lpf(tr + (-nBeforeTrig):0);
-        e_t_lpf_PrePost_ch(trIdx,:,2) = e_t_lpf(tr +   0:nBeforeTrig );
+        d_PrePost_ch(trIdx,:,1) = d(tr + ((-nBeforeTrig):0));
+        d_PrePost_ch(trIdx,:,2) = d(tr + (  0:nBeforeTrig ));
+        d_lpf_PrePost_ch(trIdx,:,1) = d_lpf(tr + ((-nBeforeTrig):0));
+        d_lpf_PrePost_ch(trIdx,:,2) = d_lpf(tr + (  0:nBeforeTrig ));
+%        e_train_PrePost_ch(trIdx,:,1) = e_train(tr + ((-nBeforeTrig):0));
+%        e_train_PrePost_ch(trIdx,:,2) = e_train(tr + (  0:nBeforeTrig ));
+%        e_train_lpf_PrePost_ch(trIdx,:,1) = e_train_lpf(tr + ((-nBeforeTrig):0));
+%        e_train_lpf_PrePost_ch(trIdx,:,2) = e_train_lpf(tr + (  0:nBeforeTrig ));
+%        e_test_PrePost_ch(trIdx,:,1) = e_test(tr + ((-nBeforeTrig):0));
+%        e_test_PrePost_ch(trIdx,:,2) = e_test(tr + (  0:nBeforeTrig ));
+%        e_test_lpf_PrePost_ch(trIdx,:,1) = e_test_lpf(tr + ((-nBeforeTrig):0));
+%        e_test_lpf_PrePost_ch(trIdx,:,2) = e_test_lpf(tr + (  0:nBeforeTrig ));
+        e_t_PrePost_ch(trIdx,:,1) = e_t(tr + ((-nBeforeTrig):0));
+        e_t_PrePost_ch(trIdx,:,2) = e_t(tr + (  0:nBeforeTrig ));
+        e_t_lpf_PrePost_ch(trIdx,:,1) = e_t_lpf(tr + ((-nBeforeTrig):0));
+        e_t_lpf_PrePost_ch(trIdx,:,2) = e_t_lpf(tr + (  0:nBeforeTrig ));
     end
 
     d_PrePost{idx} = d_PrePost_ch;

@@ -232,3 +232,96 @@ end
 
 ylim([-8e-5, 8e-5])
 xlim([336.351, 336.449])
+
+%% getting signals before and after stim  
+tBeforeTrig = .29; % s
+nBeforeTrig = tBeforeTrig*Fs; % samples
+t_PrePost = [-tBeforeTrig:(1/Fs):0; 0:(1/Fs):tBeforeTrig]; % [before; after]
+
+d_PrePost           = cell(1, length(uchan));
+d_lpf_PrePost       = cell(size(d_PrePost));
+e_train_PrePost     = cell(size(d_PrePost));
+e_train_lpf_PrePost = cell(size(d_PrePost));
+e_test_PrePost      = cell(size(d_PrePost));
+e_test_lpf_PrePost  = cell(size(d_PrePost));
+e_t_PrePost         = cell(size(d_PrePost));
+e_t_lpf_PrePost     = cell(size(d_PrePost));
+
+for idx = 1:length(uchan)
+    gch = g(:,idx);
+    trig = [0; abs(diff(gch))];
+    trig = trig > .1*max(trig); trig = find(trig);
+
+    d_PrePost_ch           = zeros(length(trig), nBeforeTrig, 2);
+    d_lpf_PrePost_ch       = zeros(size(d_PrePost_ch));
+    e_train_PrePost_ch     = zeros(size(d_PrePost_ch));
+    e_train_lpf_PrePost_ch = zeros(size(d_PrePost_ch));
+    e_test_PrePost_ch      = zeros(size(d_PrePost_ch));
+    e_test_lpf_PrePost_ch  = zeros(size(d_PrePost_ch));
+    e_t_PrePost_ch         = zeros(size(d_PrePost_ch));
+    e_t_lpf_PrePost_ch     = zeros(size(d_PrePost_ch));
+
+    for trIdx = 1:length(trig)
+        tr = trig(trIdx); % timepoint
+
+        d_PrePost_ch(trIdx,:,1) = d(tr + (-nBeforeTrig):0);
+        d_PrePost_ch(trIdx,:,2) = d(tr +   0:nBeforeTrig );
+        d_lpf_PrePost_ch(trIdx,:,1) = d_lpf(tr + (-nBeforeTrig):0);
+        d_lpf_PrePost_ch(trIdx,:,2) = d_lpf(tr +   0:nBeforeTrig );
+        e_train_PrePost_ch(trIdx,:,1) = e_train(tr + (-nBeforeTrig):0);
+        e_train_PrePost_ch(trIdx,:,2) = e_train(tr +   0:nBeforeTrig );
+        e_train_lpf_PrePost_ch(trIdx,:,1) = e_train_lpf(tr + (-nBeforeTrig):0);
+        e_train_lpf_PrePost_ch(trIdx,:,2) = e_train_lpf(tr +   0:nBeforeTrig );
+        e_test_PrePost_ch(trIdx,:,1) = e_test(tr + (-nBeforeTrig):0);
+        e_test_PrePost_ch(trIdx,:,2) = e_test(tr +   0:nBeforeTrig );
+        e_test_lpf_PrePost_ch(trIdx,:,1) = e_test_lpf(tr + (-nBeforeTrig):0);
+        e_test_lpf_PrePost_ch(trIdx,:,2) = e_test_lpf(tr +   0:nBeforeTrig );
+        e_t_PrePost_ch(trIdx,:,1) = e_t(tr + (-nBeforeTrig):0);
+        e_t_PrePost_ch(trIdx,:,2) = e_t(tr +   0:nBeforeTrig );
+        e_t_lpf_PrePost_ch(trIdx,:,1) = e_t_lpf(tr + (-nBeforeTrig):0);
+        e_t_lpf_PrePost_ch(trIdx,:,2) = e_t_lpf(tr +   0:nBeforeTrig );
+    end
+
+    d_PrePost{idx} = d_PrePost_ch;
+    d_lpf_PrePost{idx} = d_lpf_PrePost_ch;
+    e_train_PrePost{idx} = e_train_PrePost_ch;
+    e_train_lpf_PrePost{idx} = e_train_lpf_PrePost_ch;
+    e_test_PrePost{idx} = e_test_PrePost_ch;
+    e_test_lpf_PrePost{idx} = e_test_lpf_PrePost_ch;
+    e_t_PrePost{idx} = e_t_PrePost_ch;
+    e_t_lpf_PrePost{idx} = e_t_lpf_PrePost_ch;
+end
+
+%% cleanup 
+clear d_PrePost_ch d_lpf_PrePost_che_train_PrePost_ch e_train_lpf_PrePost_ch 
+clear e_test_PrePost_ch e_test_lpf_PrePost_ch e_t_PrePost_ch e_t_lpf_PrePost_ch 
+clear gch trig trIdx tr
+
+%% plotting averaged signals before and after stim 
+for idx = 1:length(uchan)
+    sigFiltCh = e_t_lpf_PrePost{idx};
+    sigUnfiltCh = d_PrePost{idx};
+
+    meanFiltBefore = mean(sigFiltCh(:,:,1));
+    meanFiltAfter  = mean(sigFiltCh(:,:,2));
+    errbFiltBefore =  std(sigFiltCh(:,:,1));
+    errbFiltAfter  =  std(sigFiltCh(:,:,2));
+    meanUnfiltBefore = mean(sigUnfiltCh(:,:,1));
+    meanUnfiltAfter  = mean(sigUnfiltCh(:,:,2));
+    errbUnfiltBefore =  std(sigUnfiltCh(:,:,1));
+    errbUnfiltAfter  =  std(sigUnfiltCh(:,:,2));
+
+    figure; 
+    subplot(221); plot(t_PrePost(1,:), meanFiltBefore); title('Filtered Before')
+    grid on; hold on; 
+    plot(t_PrePost(1,:), meanFiltBefore + [1;-1].*[errbFiltBefore; errbFiltBefore], '--');
+    subplot(222); plot(t_PrePost(2,:), meanFiltAfter); title('Filtered After')
+    grid on; hold on; 
+    plot(t_PrePost(2,:), meanFiltAfter  + [1;-1].*[errbFiltAfter ; errbFiltAfter ], '--');
+    subplot(223); plot(t_PrePost(1,:), meanUnfiltBefore); title('Unfiltered Before')
+    grid on; hold on; 
+    plot(t_PrePost(1,:), meanUnfiltBefore + [1;-1].*[errbUnfiltBefore; errbUnfiltBefore], '--');
+    subplot(224); plot(t_PrePost(2,:), meanUnfiltAfter); title('Unfiltered After')
+    grid on; hold on; 
+    plot(t_PrePost(2,:), meanUnfiltAfter  + [1;-1].*[errbUnfiltAfter ; errbUnfiltAfter ], '--');
+end

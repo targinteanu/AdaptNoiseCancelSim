@@ -192,7 +192,7 @@ for idx = 1:length(uchan)
     pause(.5);
     for ep = (N:size(t,1))-N+1
         Gidx = g((1:N)+ep-1, idx)';
-        E = d(ep+N-1) - Gidx*w_OL(:,idx);
+        E = d(ep+N-1,idx) - Gidx*w_OL(:,idx);
         e_t(ep, idx) = E;
         dw = E*Gidx';
         w_OL(:,idx) = w_OL(:,idx) + stepsize*dw;
@@ -228,14 +228,16 @@ for idx = 1:length(uchan)
     figure; 
     plot(t(:,idx), d(:,idx), 'k', 'LineWidth', 1); hold on;
 %    plot(t_train(:,idx), e_train_lpf(:,idx)); plot(t_test(:,idx), e_test_lpf(:,idx));
-    plot(t(N:end,idx)-.007, e_t_lpf(:,idx));
+    plot(t(N:end,idx)-.007, e_t_lpf(:,idx)); % is alignment valid???
     grid on;
     xlabel('time (s)'); ylabel('filtered signal (V)');
 %    legend('original', 'train', 'test', 'online');
     legend('original', 'adaptive filtered');
     title(['channel ',num2str(uchan(idx))])
     
-    xlim([1410.1, 1411.4])
+    %xlim([1410.1, 1411.4])
+    xlim([1410.351, 1410.449])
+    %xlim([336.1, 337.1])
     ylim([-8e-5, 8e-5])
 end
 
@@ -322,17 +324,30 @@ for idx = 1:length(uchan)
     errbUnfiltBefore =  std(sigUnfiltCh(:,:,1));
     errbUnfiltAfter  =  std(sigUnfiltCh(:,:,2));
 
-    figure; 
-    subplot(221); plot(t_PrePost(1,:), meanFiltBefore); title('Filtered Before')
+    figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 
+    sgtitle(['Chennel ',num2str(uchan(idx)),' Avg. Response to Stim']);
+
+    subplot(221); plot(t_PrePost(1,:), meanFiltBefore, 'Color', dkBlue); 
+    title('Filtered Before');
     grid on; hold on; 
-    plot(t_PrePost(1,:), meanFiltBefore + [1;-1].*[errbFiltBefore; errbFiltBefore], '--');
-    subplot(222); plot(t_PrePost(2,:), meanFiltAfter); title('Filtered After')
+    plot(t_PrePost(1,:), meanFiltBefore + [1;-1].*[errbFiltBefore; errbFiltBefore], ':', 'Color', dkBlue);
+    xlabel('time (s)'); ylabel('Signal (V)'); 
+
+    subplot(222); plot(t_PrePost(2,:), meanFiltAfter, 'Color', dkBlue); 
+    title('Filtered After');
     grid on; hold on; 
-    plot(t_PrePost(2,:), meanFiltAfter  + [1;-1].*[errbFiltAfter ; errbFiltAfter ], '--');
-    subplot(223); plot(t_PrePost(1,:), meanUnfiltBefore); title('Unfiltered Before')
+    plot(t_PrePost(2,:), meanFiltAfter  + [1;-1].*[errbFiltAfter ; errbFiltAfter ], ':', 'Color', dkBlue);
+    xlabel('time (s)'); ylabel('Signal (V)');
+
+    subplot(223); plot(t_PrePost(1,:), meanUnfiltBefore, 'Color', dkRed); 
+    title('Unfiltered Before');
     grid on; hold on; 
-    plot(t_PrePost(1,:), meanUnfiltBefore + [1;-1].*[errbUnfiltBefore; errbUnfiltBefore], '--');
-    subplot(224); plot(t_PrePost(2,:), meanUnfiltAfter); title('Unfiltered After')
+    plot(t_PrePost(1,:), meanUnfiltBefore + [1;-1].*[errbUnfiltBefore; errbUnfiltBefore], ':', 'Color', dkRed);
+    xlabel('time (s)'); ylabel('Signal (V)');
+
+    subplot(224); plot(t_PrePost(2,:), meanUnfiltAfter, 'Color', dkRed); 
+    title('Unfiltered After');
     grid on; hold on; 
-    plot(t_PrePost(2,:), meanUnfiltAfter  + [1;-1].*[errbUnfiltAfter ; errbUnfiltAfter ], '--');
+    plot(t_PrePost(2,:), meanUnfiltAfter  + [1;-1].*[errbUnfiltAfter ; errbUnfiltAfter ], ':', 'Color', dkRed);
+    xlabel('time (s)'); ylabel('Signal (V)');
 end

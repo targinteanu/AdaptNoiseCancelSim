@@ -328,24 +328,36 @@ for idx = 1:length(uchan)
     sgtitle(['Chennel ',num2str(uchan(idx)),' Avg. Response to Stim']);
 
     subplot(221); 
+           plotWithDistrib(t_PrePost(1,:), meanUnfiltBefore, errbUnfiltBefore, ltRed);
     yrng = plotWithDistrib(t_PrePost(1,:), meanFiltBefore, errbFiltBefore, dkBlue);
     title('Filtered Before'); grid on; 
     xlabel('time (s)'); ylabel('Signal (V)'); 
+    ylim(yrng(2,:)); 
+    legend('Unfiltered', '-1SD', '+1SD', 'Filtered', '-1SD', '+1SD', 'Location','eastoutside');
 
     subplot(222); 
+           plotWithDistrib(t_PrePost(2,:), meanUnfiltAfter, errbUnfiltAfter, ltRed);
     yrng = plotWithDistrib(t_PrePost(2,:), meanFiltAfter, errbFiltAfter, dkBlue);
     title('Filtered After'); grid on; 
     xlabel('time (s)'); ylabel('Signal (V)');
+    ylim(yrng(2,:));
+    legend('Unfiltered', '-1SD', '+1SD', 'Filtered', '-1SD', '+1SD', 'Location','eastoutside');
 
     subplot(223);  
+           plotWithDistrib(t_PrePost(1,:), meanFiltBefore, errbFiltBefore, ltBlue);
     yrng = plotWithDistrib(t_PrePost(1,:), meanUnfiltBefore, errbUnfiltBefore, dkRed);
     title('Unfiltered Before'); grid on; 
     xlabel('time (s)'); ylabel('Signal (V)');
+    ylim(yrng(2,:));
+    legend('Filtered', '-1SD', '+1SD', 'Unfiltered', '-1SD', '+1SD', 'Location','eastoutside');
 
     subplot(224);  
+           plotWithDistrib(t_PrePost(2,:), meanFiltAfter, errbFiltAfter, ltBlue);
     yrng = plotWithDistrib(t_PrePost(2,:), meanUnfiltAfter, errbUnfiltAfter, dkRed);
     title('Unfiltered After'); grid on; 
     xlabel('time (s)'); ylabel('Signal (V)');
+    ylim(yrng(2,:));
+    legend('Filtered', '-1SD', '+1SD', 'Unfiltered', '-1SD', '+1SD', 'Location','eastoutside');
 end
 
 %% helper functions 

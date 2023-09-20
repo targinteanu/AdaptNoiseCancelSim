@@ -327,27 +327,35 @@ for idx = 1:length(uchan)
     figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 
     sgtitle(['Chennel ',num2str(uchan(idx)),' Avg. Response to Stim']);
 
-    subplot(221); plot(t_PrePost(1,:), meanFiltBefore, 'Color', dkBlue); 
-    title('Filtered Before');
-    grid on; hold on; 
-    plot(t_PrePost(1,:), meanFiltBefore + [1;-1].*[errbFiltBefore; errbFiltBefore], ':', 'Color', dkBlue);
+    subplot(221); 
+    yrng = plotWithDistrib(t_PrePost(1,:), meanFiltBefore, errbFiltBefore, dkBlue);
+    title('Filtered Before'); grid on; 
     xlabel('time (s)'); ylabel('Signal (V)'); 
 
-    subplot(222); plot(t_PrePost(2,:), meanFiltAfter, 'Color', dkBlue); 
-    title('Filtered After');
-    grid on; hold on; 
-    plot(t_PrePost(2,:), meanFiltAfter  + [1;-1].*[errbFiltAfter ; errbFiltAfter ], ':', 'Color', dkBlue);
+    subplot(222); 
+    yrng = plotWithDistrib(t_PrePost(2,:), meanFiltAfter, errbFiltAfter, dkBlue);
+    title('Filtered After'); grid on; 
     xlabel('time (s)'); ylabel('Signal (V)');
 
-    subplot(223); plot(t_PrePost(1,:), meanUnfiltBefore, 'Color', dkRed); 
-    title('Unfiltered Before');
-    grid on; hold on; 
-    plot(t_PrePost(1,:), meanUnfiltBefore + [1;-1].*[errbUnfiltBefore; errbUnfiltBefore], ':', 'Color', dkRed);
+    subplot(223);  
+    yrng = plotWithDistrib(t_PrePost(1,:), meanUnfiltBefore, errbUnfiltBefore, dkRed);
+    title('Unfiltered Before'); grid on; 
     xlabel('time (s)'); ylabel('Signal (V)');
 
-    subplot(224); plot(t_PrePost(2,:), meanUnfiltAfter, 'Color', dkRed); 
-    title('Unfiltered After');
-    grid on; hold on; 
-    plot(t_PrePost(2,:), meanUnfiltAfter  + [1;-1].*[errbUnfiltAfter ; errbUnfiltAfter ], ':', 'Color', dkRed);
+    subplot(224);  
+    yrng = plotWithDistrib(t_PrePost(2,:), meanUnfiltAfter, errbUnfiltAfter, dkRed);
+    title('Unfiltered After'); grid on; 
     xlabel('time (s)'); ylabel('Signal (V)');
+end
+
+%% helper functions 
+function range = plotWithDistrib(x, y, dist, colr)
+    % plot y with a dashed +- distribution surrounding y. 
+    % y and dist must be row vectors
+    plot(x, y, 'Color', colr); 
+    hold on; 
+    Y = y + [1;-1].*dist;
+    plot(x, Y, ':', 'Color', colr);
+    range = [min(Y(:)), max(Y(:))];
+    range = [range; 1.25*[-1,1]*.5*diff(range) + mean(range)];
 end

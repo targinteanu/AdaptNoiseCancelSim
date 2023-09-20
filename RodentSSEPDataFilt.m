@@ -55,7 +55,7 @@ stepsize = .2;
 nUpdates = 100;
 
 %% "linearize" trial blocks 
-uchan = uchan(1); % comment out to get all chans
+%uchan = uchan(1); % comment out to get all chans
 t        = zeros(size(T,1)  *size(T,2),   length(uchan));
 g        = zeros(size(G,1)  *size(G,2),   length(uchan));
 d_unfilt = zeros(size(dta,1)*size(dta,2), length(uchan));
@@ -177,7 +177,8 @@ end
 
 %% online LMS 
 figure('Units','normalized', 'Position',[.1 .1 .8 .8]);
-w_OL = zeros(N, length(uchan));
+%w_OL = zeros(N, length(uchan));
+w_OL = w;
 e_t = nan(size(t,1)-N+1, length(uchan));
 
 for idx = 1:length(uchan)
@@ -233,10 +234,14 @@ for idx = 1:length(uchan)
 %    legend('original', 'train', 'test', 'online');
     legend('original', 'adaptive filtered');
     title(['channel ',num2str(uchan(idx))])
+    
+    xlim([1410.1, 1411.4])
+    ylim([-8e-5, 8e-5])
 end
 
-ylim([-8e-5, 8e-5])
-xlim([336.351, 336.449])
+%ylim([-8e-5, 8e-5])
+%xlim([336.351, 336.449])
+%xlim([336.1, 337.1])
 
 %% getting signals before and after stim  
 tBeforeTrig = .29; % s
@@ -270,22 +275,14 @@ for idx = 1:length(uchan)
     for trIdx = 1:length(trig)
         tr = trig(trIdx); % timepoint
 
-        d_PrePost_ch(trIdx,:,1) = d(tr + ((-nBeforeTrig):0));
-        d_PrePost_ch(trIdx,:,2) = d(tr + (  0:nBeforeTrig ));
-        d_lpf_PrePost_ch(trIdx,:,1) = d_lpf(tr + ((-nBeforeTrig):0));
-        d_lpf_PrePost_ch(trIdx,:,2) = d_lpf(tr + (  0:nBeforeTrig ));
-%        e_train_PrePost_ch(trIdx,:,1) = e_train(tr + ((-nBeforeTrig):0));
-%        e_train_PrePost_ch(trIdx,:,2) = e_train(tr + (  0:nBeforeTrig ));
-%        e_train_lpf_PrePost_ch(trIdx,:,1) = e_train_lpf(tr + ((-nBeforeTrig):0));
-%        e_train_lpf_PrePost_ch(trIdx,:,2) = e_train_lpf(tr + (  0:nBeforeTrig ));
-%        e_test_PrePost_ch(trIdx,:,1) = e_test(tr + ((-nBeforeTrig):0));
-%        e_test_PrePost_ch(trIdx,:,2) = e_test(tr + (  0:nBeforeTrig ));
-%        e_test_lpf_PrePost_ch(trIdx,:,1) = e_test_lpf(tr + ((-nBeforeTrig):0));
-%        e_test_lpf_PrePost_ch(trIdx,:,2) = e_test_lpf(tr + (  0:nBeforeTrig ));
-        e_t_PrePost_ch(trIdx,:,1) = e_t(tr + ((-nBeforeTrig):0));
-        e_t_PrePost_ch(trIdx,:,2) = e_t(tr + (  0:nBeforeTrig ));
-        e_t_lpf_PrePost_ch(trIdx,:,1) = e_t_lpf(tr + ((-nBeforeTrig):0));
-        e_t_lpf_PrePost_ch(trIdx,:,2) = e_t_lpf(tr + (  0:nBeforeTrig ));
+        d_PrePost_ch(trIdx,:,1) = d(tr + ((-nBeforeTrig):0), idx);
+        d_PrePost_ch(trIdx,:,2) = d(tr + (  0:nBeforeTrig ), idx);
+        d_lpf_PrePost_ch(trIdx,:,1) = d_lpf(tr + ((-nBeforeTrig):0), idx);
+        d_lpf_PrePost_ch(trIdx,:,2) = d_lpf(tr + (  0:nBeforeTrig ), idx);
+        e_t_PrePost_ch(trIdx,:,1) = e_t(tr + ((-nBeforeTrig):0), idx);
+        e_t_PrePost_ch(trIdx,:,2) = e_t(tr + (  0:nBeforeTrig ), idx);
+        e_t_lpf_PrePost_ch(trIdx,:,1) = e_t_lpf(tr + ((-nBeforeTrig):0), idx);
+        e_t_lpf_PrePost_ch(trIdx,:,2) = e_t_lpf(tr + (  0:nBeforeTrig ), idx);
     end
 
     d_PrePost{idx} = d_PrePost_ch;
@@ -304,6 +301,14 @@ clear e_test_PrePost_ch e_test_lpf_PrePost_ch e_t_PrePost_ch e_t_lpf_PrePost_ch
 clear gch trig trIdx tr
 
 %% plotting averaged signals before and after stim 
+% colors: 
+dkBlue  = [  1,  50, 130] /255;
+ltBlue  = [145, 190, 255] /255;
+dkRed   = [110,   0,   0] /255;
+ltRed   = [250, 150, 150] /255;
+dkBlack = [  0,   0,   0] /255;
+ltBlack = [110, 110, 110] /255;
+
 for idx = 1:length(uchan)
     sigFiltCh = e_t_lpf_PrePost{idx};
     sigUnfiltCh = d_PrePost{idx};

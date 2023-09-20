@@ -119,16 +119,16 @@ hpFilt = designfilt('highpassiir', ...
                     'StopbandAttenuation', 60, ...
                     'SampleRate', Fs, ... 
                     'DesignMethod', 'butter');
-% lowpass filtering (noise removal)
+d         = filter(hpFilt, d_unfilt);
+%% lowpass filtering (noise removal)
 lpFilt = designfilt('lowpassiir', ...
-                    'StopbandFrequency', 2000, ...
-                    'PassbandFrequency', 1900, ...
+                    'StopbandFrequency', 1100, ...
+                    'PassbandFrequency', 1000, ...
                     'PassbandRipple', .5, ...
                     'StopbandAttenuation', 60, ...
                     'SampleRate', Fs, ... 
                     'DesignMethod', 'butter');
 %fvtool(hpFilt);
-d         = filter(hpFilt, d_unfilt);
 
 %% organize into testing and training 
 
@@ -324,10 +324,24 @@ for idx = 1:length(uchan)
     errbUnfiltBefore =  std(sigUnfiltCh(:,:,1));
     errbUnfiltAfter  =  std(sigUnfiltCh(:,:,2));
 
+    [wFiltBefore, spectFiltBeforeCh] = PowerSpectrum(sigFiltCh(:,:,1), Fs);
+    [wFiltAfter, spectFiltAfterCh] = PowerSpectrum(sigFiltCh(:,:,2), Fs);
+    [wUnfiltBefore, spectUnfiltBeforeCh] = PowerSpectrum(sigUnfiltCh(:,:,1), Fs);
+    [wUnfiltAfter, spectUnfiltAfterCh] = PowerSpectrum(sigUnfiltCh(:,:,2), Fs);
+
+    meanSpectFiltBefore = mean(spectFiltBeforeCh); 
+    errbSpectFiltBefore =  std(spectFiltBeforeCh);
+    meanSpectFiltAfter = mean(spectFiltAfterCh); 
+    errbSpectFiltAfter =  std(spectFiltAfterCh);
+    meanSpectUnfiltBefore = mean(spectUnfiltBeforeCh); 
+    errbSpectUnfiltBefore =  std(spectUnfiltBeforeCh);
+    meanSpectUnfiltAfter = mean(spectUnfiltAfterCh); 
+    errbSpectUnfiltAfter =  std(spectUnfiltAfterCh);
+
     figure('Units','normalized', 'Position',[.1 .1 .8 .8]); 
     sgtitle(['Chennel ',num2str(uchan(idx)),' Avg. Response to Stim']);
 
-    subplot(221); 
+    subplot(321); 
            plotWithDistrib(t_PrePost(1,:), meanUnfiltBefore, errbUnfiltBefore, ltRed);
     yrng = plotWithDistrib(t_PrePost(1,:), meanFiltBefore, errbFiltBefore, dkBlue);
     title('Filtered Before'); grid on; 
@@ -335,7 +349,7 @@ for idx = 1:length(uchan)
     ylim(yrng(2,:)); 
     legend('Unfiltered', '-1SD', '+1SD', 'Filtered', '-1SD', '+1SD', 'Location','eastoutside');
 
-    subplot(222); 
+    subplot(322); 
            plotWithDistrib(t_PrePost(2,:), meanUnfiltAfter, errbUnfiltAfter, ltRed);
     yrng = plotWithDistrib(t_PrePost(2,:), meanFiltAfter, errbFiltAfter, dkBlue);
     title('Filtered After'); grid on; 
@@ -343,7 +357,7 @@ for idx = 1:length(uchan)
     ylim(yrng(2,:));
     legend('Unfiltered', '-1SD', '+1SD', 'Filtered', '-1SD', '+1SD', 'Location','eastoutside');
 
-    subplot(223);  
+    subplot(323);  
            plotWithDistrib(t_PrePost(1,:), meanFiltBefore, errbFiltBefore, ltBlue);
     yrng = plotWithDistrib(t_PrePost(1,:), meanUnfiltBefore, errbUnfiltBefore, dkRed);
     title('Unfiltered Before'); grid on; 
@@ -351,13 +365,29 @@ for idx = 1:length(uchan)
     ylim(yrng(2,:));
     legend('Filtered', '-1SD', '+1SD', 'Unfiltered', '-1SD', '+1SD', 'Location','eastoutside');
 
-    subplot(224);  
+    subplot(324);  
            plotWithDistrib(t_PrePost(2,:), meanFiltAfter, errbFiltAfter, ltBlue);
     yrng = plotWithDistrib(t_PrePost(2,:), meanUnfiltAfter, errbUnfiltAfter, dkRed);
     title('Unfiltered After'); grid on; 
     xlabel('time (s)'); ylabel('Signal (V)');
     ylim(yrng(2,:));
     legend('Filtered', '-1SD', '+1SD', 'Unfiltered', '-1SD', '+1SD', 'Location','eastoutside');
+
+    subplot(325); 
+    plotWithDistrib(wUnfiltBefore, meanSpectUnfiltBefore, errbSpectUnfiltBefore, dkRed);
+    plotWithDistrib(wFiltBefore, meanSpectFiltBefore, errbSpectFiltBefore, dkBlue);
+    title('Spectrum Before'); grid on; 
+    set(gca, 'YScale', 'log');
+    xlabel('Frequency (Hz)'); ylabel('Power Spectrum (V*s)');
+    legend('Unfiltered', '-1SD', '+1SD', 'Filtered', '-1SD', '+1SD', 'Location','eastoutside');
+
+    subplot(326); 
+    plotWithDistrib(wUnfiltAfter, meanSpectUnfiltAfter, errbSpectUnfiltAfter, dkRed);
+    plotWithDistrib(wFiltAfter, meanSpectFiltAfter, errbSpectFiltAfter, dkBlue);
+    title('Spectrum After'); grid on; 
+    set(gca, 'YScale', 'log');
+    xlabel('Frequency (Hz)'); ylabel('Power Spectrum (V*s)');
+    legend('Unfiltered', '-1SD', '+1SD', 'Filtered', '-1SD', '+1SD', 'Location','eastoutside');
 end
 
 %% helper functions 
@@ -370,4 +400,21 @@ function range = plotWithDistrib(x, y, dist, colr)
     plot(x, Y, ':', 'Color', colr);
     range = [min(Y(:)), max(Y(:))];
     range = [range; 1.25*[-1,1]*.5*diff(range) + mean(range)];
+end
+
+function [wP, P, w, Y] = PowerSpectrum(y, Fs)
+    % y: a row vector/matrix in time domain 
+    % wP: one-sided frequency 
+    % P: power spectrum (1-sided) of Y
+    % w: two-sided frequency 
+    % Y: frequency spectrum (2-sided, complex)
+    y = y';
+    Y = fft(y); 
+    L = size(y, 2); 
+    w = Fs/L*(-L/2:L/2-1);
+    P = abs(Y/L)'; P = P(:, 1:L/2+1);
+    P(:, 2:end-1) = 2*P(:, 2:end-1);
+    P = P.^2;
+    wP = Fs/L*(0:(L/2));
+    Y = fftshift(Y)';
 end

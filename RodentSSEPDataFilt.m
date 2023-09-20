@@ -374,20 +374,26 @@ for idx = 1:length(uchan)
     legend('Filtered', '-1SD', '+1SD', 'Unfiltered', '-1SD', '+1SD', 'Location','eastoutside');
 
     subplot(325); 
+    semilogy(wUnfiltAfter, meanSpectUnfiltAfter, 'Color', ltRed); hold on; 
+    semilogy(wFiltAfter, meanSpectFiltAfter, 'Color', ltBlue);
     plotWithDistrib(wUnfiltBefore, meanSpectUnfiltBefore, errbSpectUnfiltBefore, dkRed);
     plotWithDistrib(wFiltBefore, meanSpectFiltBefore, errbSpectFiltBefore, dkBlue);
     title('Spectrum Before'); grid on; 
-    set(gca, 'YScale', 'log');
+    %set(gca, 'YScale', 'log');
     xlabel('Frequency (Hz)'); ylabel('Power Spectrum (V*s)');
-    legend('Unfiltered', '-1SD', '+1SD', 'Filtered', '-1SD', '+1SD', 'Location','eastoutside');
+    legend('Unfiltered After', 'Filtered After', ...
+        'Unfiltered Before', '-1SD', '+1SD', 'Filtered Before', '-1SD', '+1SD', 'Location','eastoutside');
 
     subplot(326); 
+    semilogy(wUnfiltBefore, meanSpectUnfiltBefore, 'Color', ltRed); hold on; 
+    semilogy(wFiltBefore, meanSpectFiltBefore, 'Color', ltBlue);
     plotWithDistrib(wUnfiltAfter, meanSpectUnfiltAfter, errbSpectUnfiltAfter, dkRed);
     plotWithDistrib(wFiltAfter, meanSpectFiltAfter, errbSpectFiltAfter, dkBlue);
     title('Spectrum After'); grid on; 
-    set(gca, 'YScale', 'log');
+    %set(gca, 'YScale', 'log');
     xlabel('Frequency (Hz)'); ylabel('Power Spectrum (V*s)');
-    legend('Unfiltered', '-1SD', '+1SD', 'Filtered', '-1SD', '+1SD', 'Location','eastoutside');
+    legend('Unfiltered Before', 'Filtered Before', ...
+        'Unfiltered After', '-1SD', '+1SD', 'Filtered After', '-1SD', '+1SD', 'Location','eastoutside');
 end
 
 %% helper functions 

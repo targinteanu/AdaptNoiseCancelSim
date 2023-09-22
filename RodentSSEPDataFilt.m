@@ -122,13 +122,13 @@ hpFilt = designfilt('highpassiir', ...
 d         = filter(hpFilt, d_unfilt);
 %% lowpass filtering (noise removal)
 lpFilt = designfilt('lowpassiir', ...
-                    'StopbandFrequency', 500, ...
-                    'PassbandFrequency', 480, ...
+                    'StopbandFrequency', 6000, ...
+                    'PassbandFrequency', 5900, ...
                     'PassbandRipple', .5, ...
                     'StopbandAttenuation', 60, ...
                     'SampleRate', Fs, ... 
                     'DesignMethod', 'butter');
-%fvtool(hpFilt);
+%fvtool(lpFilt);
 
 %% organize into testing and training 
 
@@ -265,27 +265,45 @@ for idx = 1:length(uchan)
     trig = [0; abs(diff(gch))];
     trig = trig > .1*max(trig); trig = find(trig);
 
-    d_PrePost_ch           = zeros(length(trig), nBeforeTrig+1, 2);
-    d_lpf_PrePost_ch       = zeros(size(d_PrePost_ch));
-    e_train_PrePost_ch     = zeros(size(d_PrePost_ch));
-    e_train_lpf_PrePost_ch = zeros(size(d_PrePost_ch));
-    e_test_PrePost_ch      = zeros(size(d_PrePost_ch));
-    e_test_lpf_PrePost_ch  = zeros(size(d_PrePost_ch));
-    e_t_PrePost_ch         = zeros(size(d_PrePost_ch));
-    e_t_lpf_PrePost_ch     = zeros(size(d_PrePost_ch));
+    d_PrePost_ch           = nan(length(trig), nBeforeTrig+1, 2);
+    d_lpf_PrePost_ch       = nan(size(d_PrePost_ch));
+    e_train_PrePost_ch     = nan(size(d_PrePost_ch));
+    e_train_lpf_PrePost_ch = nan(size(d_PrePost_ch));
+    e_test_PrePost_ch      = nan(size(d_PrePost_ch));
+    e_test_lpf_PrePost_ch  = nan(size(d_PrePost_ch));
+    e_t_PrePost_ch         = nan(size(d_PrePost_ch));
+    e_t_lpf_PrePost_ch     = nan(size(d_PrePost_ch));
 
     for trIdx = 1:length(trig)
         tr = trig(trIdx); % timepoint
 
-        d_PrePost_ch(trIdx,:,1) = d(tr + ((-nBeforeTrig):0), idx);
-        d_PrePost_ch(trIdx,:,2) = d(tr + (  0:nBeforeTrig ), idx);
-        d_lpf_PrePost_ch(trIdx,:,1) = d_lpf(tr + ((-nBeforeTrig):0), idx);
-        d_lpf_PrePost_ch(trIdx,:,2) = d_lpf(tr + (  0:nBeforeTrig ), idx);
-        e_t_PrePost_ch(trIdx,:,1) = e_t(tr + ((-nBeforeTrig):0), idx);
-        e_t_PrePost_ch(trIdx,:,2) = e_t(tr + (  0:nBeforeTrig ), idx);
-        e_t_lpf_PrePost_ch(trIdx,:,1) = e_t_lpf(tr + ((-nBeforeTrig):0), idx);
-        e_t_lpf_PrePost_ch(trIdx,:,2) = e_t_lpf(tr + (  0:nBeforeTrig ), idx);
+        % consider a more robust solution; padding e_t or making a separate
+        % time vector
+        % consider aligning so that rows of e correspond to d exactly 
+        if (tr -nBeforeTrig > 0) & (tr +nBeforeTrig <= size(d,1))
+            d_PrePost_ch(trIdx,:,1) = d(tr + ((-nBeforeTrig):0), idx);
+            d_PrePost_ch(trIdx,:,2) = d(tr + (  0:nBeforeTrig ), idx);
+            d_lpf_PrePost_ch(trIdx,:,1) = d_lpf(tr + ((-nBeforeTrig):0), idx);
+            d_lpf_PrePost_ch(trIdx,:,2) = d_lpf(tr + (  0:nBeforeTrig ), idx);
+        end
+        if (tr -N+1 -nBeforeTrig > 0) & (tr -N+1 +nBeforeTrig <= size(e_t,1))
+            e_t_PrePost_ch(trIdx,:,1) = e_t(tr -N+1 + ((-nBeforeTrig):0), idx);
+            e_t_PrePost_ch(trIdx,:,2) = e_t(tr -N+1 + (  0:nBeforeTrig ), idx);
+            e_t_lpf_PrePost_ch(trIdx,:,1) = e_t_lpf(tr -N+1 + ((-nBeforeTrig):0), idx);
+            e_t_lpf_PrePost_ch(trIdx,:,2) = e_t_lpf(tr -N+1 + (  0:nBeforeTrig ), idx);
+        end
     end
+
+    toRemove = sum(e_t_PrePost_ch,2); 
+    toRemove = sum(toRemove,3);
+    toRemove = isnan(toRemove);
+    e_t_PrePost_ch = e_t_PrePost_ch(~toRemove,:,:);
+    e_t_lpf_PrePost_ch = e_t_lpf_PrePost_ch(~toRemove,:,:);
+    toRemove = sum(d_PrePost_ch,2); 
+    toRemove = sum(toRemove,3);
+    toRemove = isnan(toRemove);
+    d_PrePost_ch = d_PrePost_ch(~toRemove,:,:);
+    d_lpf_PrePost_ch = d_lpf_PrePost_ch(~toRemove,:,:);
 
     d_PrePost{idx} = d_PrePost_ch;
     d_lpf_PrePost{idx} = d_lpf_PrePost_ch;
@@ -312,7 +330,7 @@ dkBlack = [  0,   0,   0] /255;
 ltBlack = [110, 110, 110] /255;
 
 for idx = 1:length(uchan)
-    sigFiltCh = e_t_lpf_PrePost{idx};
+    sigFiltCh = e_t_PrePost{idx};
     sigUnfiltCh = d_PrePost{idx};
 
     meanFiltBefore = mean(sigFiltCh(:,:,1));

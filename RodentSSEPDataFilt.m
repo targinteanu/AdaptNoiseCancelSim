@@ -324,10 +324,15 @@ for idx = 1:length(uchan)
     errbUnfiltBefore =  std(sigUnfiltCh(:,:,1));
     errbUnfiltAfter  =  std(sigUnfiltCh(:,:,2));
 
-    [wFiltBefore, spectFiltBeforeCh] = PowerSpectrum(sigFiltCh(:,:,1), Fs);
-    [wFiltAfter, spectFiltAfterCh] = PowerSpectrum(sigFiltCh(:,:,2), Fs);
-    [wUnfiltBefore, spectUnfiltBeforeCh] = PowerSpectrum(sigUnfiltCh(:,:,1), Fs);
-    [wUnfiltAfter, spectUnfiltAfterCh] = PowerSpectrum(sigUnfiltCh(:,:,2), Fs);
+    [~, ~, wFiltBefore, spectFiltBeforeCh] = PowerSpectrum(sigFiltCh(:,:,1), Fs);
+    [~, ~, wFiltAfter, spectFiltAfterCh] = PowerSpectrum(sigFiltCh(:,:,2), Fs);
+    [~, ~, wUnfiltBefore, spectUnfiltBeforeCh] = PowerSpectrum(sigUnfiltCh(:,:,1), Fs);
+    [~, ~, wUnfiltAfter, spectUnfiltAfterCh] = PowerSpectrum(sigUnfiltCh(:,:,2), Fs);
+
+    spectFiltBeforeCh = abs(spectFiltBeforeCh);
+    spectFiltAfterCh = abs(spectFiltAfterCh);
+    spectUnfiltBeforeCh = abs(spectUnfiltBeforeCh); 
+    spectUnfiltAfterCh = abs(spectUnfiltAfterCh);
 
     meanSpectFiltBefore = mean(spectFiltBeforeCh); 
     errbSpectFiltBefore =  std(spectFiltBeforeCh);
@@ -380,7 +385,7 @@ for idx = 1:length(uchan)
     plotWithDistrib(wFiltBefore, meanSpectFiltBefore, errbSpectFiltBefore, dkBlue);
     title('Spectrum Before'); grid on; 
     %set(gca, 'YScale', 'log');
-    xlabel('Frequency (Hz)'); ylabel('Power Spectrum (V*s)');
+    xlabel('Frequency (Hz)'); ylabel('Magnitude Spectrum (V*s)');
     legend('Unfiltered After', 'Filtered After', ...
         'Unfiltered Before', '-1SD', '+1SD', 'Filtered Before', '-1SD', '+1SD', 'Location','eastoutside');
 
@@ -391,7 +396,7 @@ for idx = 1:length(uchan)
     plotWithDistrib(wFiltAfter, meanSpectFiltAfter, errbSpectFiltAfter, dkBlue);
     title('Spectrum After'); grid on; 
     %set(gca, 'YScale', 'log');
-    xlabel('Frequency (Hz)'); ylabel('Power Spectrum (V*s)');
+    xlabel('Frequency (Hz)'); ylabel('Magnitude Spectrum (V*s)');
     legend('Unfiltered Before', 'Filtered Before', ...
         'Unfiltered After', '-1SD', '+1SD', 'Filtered After', '-1SD', '+1SD', 'Location','eastoutside');
 end
@@ -414,9 +419,9 @@ function [wP, P, w, Y] = PowerSpectrum(y, Fs)
     % P: power spectrum (1-sided) of Y
     % w: two-sided frequency 
     % Y: frequency spectrum (2-sided, complex)
+    L = size(y, 2);
     y = y';
-    Y = fft(y); 
-    L = size(y, 2); 
+    Y = fft(y);  
     w = Fs/L*(-L/2:L/2-1);
     P = abs(Y/L)'; P = P(:, 1:L/2+1);
     P(:, 2:end-1) = 2*P(:, 2:end-1);
